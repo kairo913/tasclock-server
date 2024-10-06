@@ -10,6 +10,7 @@ import (
 
 	"github.com/caarlos0/env"
 	"github.com/gin-gonic/gin"
+	"github.com/kairo913/tasclock-server/app/infra"
 )
 
 type Config struct {
@@ -31,6 +32,15 @@ func main() {
 	}
 
 	r := gin.New()
+
+	sqlHandler, err := infra.NewSqlHandler()
+	if err != nil {
+		log.Fatalf("%+v\n", err)
+	}
+
+	log.Println("Connected to database")
+
+	sqlHandler.Close()
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,

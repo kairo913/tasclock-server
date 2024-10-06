@@ -1,8 +1,0 @@
-services:
-  go:
-    container_name: tasclock-server
-    build:
-      context: .
-      dockerfile: Dockerfile
-    tty: true
-    stop_signal: SIGINT

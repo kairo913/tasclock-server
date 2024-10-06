@@ -1,0 +1,41 @@
+volumes:
+    db_data: {}
+
+services:
+    go:
+        container_name: tasclock-server
+        build:
+            context: .
+            dockerfile: Dockerfile.prod
+        environment:
+            DB_USER: ${DB_USER}
+            DB_PASS: ${DB_PASS}
+            DB_NAME: ${DB_NAME}
+            DB_PORT: ${DB_PORT}
+            DB_HOST: ${DB_HOST}
+            DB_TYPE: ${DB_TYPE}
+        tty: true
+        stop_signal: SIGINT
+    # postgres:
+    #     container_name: tasclock-db
+    #     image: postgres:13
+    #     environment:
+    #         POSTGRES_USER: ${DB_USER}
+    #         POSTGRES_PASSWORD: ${DB_PASS}
+    #         POSTGRES_DB: ${DB_NAME}
+    #     ports:
+    #         - ${DB_PORT}:5432
+    #     volumes:
+    #         - db_data:/var/lib/postgresql/data
+    mysql:
+      container_name: tasclock-db
+      image: mysql:5.7
+      environment:
+        MYSQL_ROOT_PASSWORD: ${DB_PASS}
+        MYSQL_DATABASE: ${DB_NAME}
+        MYSQL_USER: ${DB_USER}
+        MYSQL_PASSWORD: ${DB_PASS}
+      ports:
+        - ${DB_PORT}:3306
+      volumes:
+        - db_data:/var/lib/mysql
