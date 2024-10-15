@@ -15,12 +15,12 @@ type SqlHandler struct {
 }
 
 type SQLConfig struct {
-	DBType   string `env:"DB_TYPE"`
-	Username string `env:"DB_USER"`
-	Password string `env:"DB_PASS"`
-	Host     string `env:"DB_HOST"`
-	Port     string `env:"DB_PORT"`
-	Database string `env:"DB_NAME"`
+	DBType   string `env:"DB_TYPE" envDefault:"mysql"`
+	Username string `env:"DB_USER" env:"root"`
+	Password string `env:"DB_PASS" env:"password"`
+	Host     string `env:"DB_HOST" envDefault:"localhost"`
+	Port     string `env:"DB_PORT" envDefault:"3306"`
+	Database string `env:"DB_NAME" envDefault:"tasclock"`
 }
 
 func NewSqlHandler() (*SqlHandler, error) {
