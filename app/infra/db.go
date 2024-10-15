@@ -16,8 +16,8 @@ type SqlHandler struct {
 
 type SQLConfig struct {
 	DBType   string `env:"DB_TYPE" envDefault:"mysql"`
-	Username string `env:"DB_USER" env:"root"`
-	Password string `env:"DB_PASS" env:"password"`
+	Username string `env:"DB_USER" envDefault:"root"`
+	Password string `env:"DB_PASS" envDefault:"password"`
 	Host     string `env:"DB_HOST" envDefault:"localhost"`
 	Port     string `env:"DB_PORT" envDefault:"3306"`
 	Database string `env:"DB_NAME" envDefault:"tasclock"`
