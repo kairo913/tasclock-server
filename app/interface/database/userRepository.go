@@ -76,8 +76,8 @@ func (repo *UserRepository) Update(u domain.User) (err error) {
 	return
 }
 
-func (repo *UserRepository) Delete(id int64) (err error) {
-	_, err = repo.SqlHandler.Execute("DELETE FROM users WHERE id = ?", id)
+func (repo *UserRepository) Delete(id string) (err error) {
+	_, err = repo.SqlHandler.Execute("DELETE FROM users WHERE user_id = ?", id)
 
 	if err != nil {
 		return
