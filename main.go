@@ -31,7 +31,10 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	r := gin.New()
+	r, err := infra.SetUpRouter(ctx)
+	if err != nil {
+		log.Fatalf("%+v\n", err)
+	}
 
 	sqlHandler, err := infra.NewSqlHandler()
 	if err != nil {
