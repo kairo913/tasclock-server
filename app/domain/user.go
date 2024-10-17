@@ -1,9 +1,11 @@
 package domain
 
 import (
+	"os"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/kairo913/tasclock-server/app/lib"
 )
 
 type User struct {
@@ -19,3 +21,22 @@ type User struct {
 }
 
 type Users []User
+
+func NewUser(lastname, firstname, email, password string) User {
+	salt := lib.MakeRandomString(64)
+
+	secretSalt := os.Getenv("SECRET_SALT")
+
+	password = lib.HashString(password+salt+secretSalt, 100000)
+
+	return User{
+		UserId:    uuid.New(),
+		Lastname:  lastname,
+		Firstname: firstname,
+		Email:     email,
+		Password:  password,
+		Salt:      salt,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+}
