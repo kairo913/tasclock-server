@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,12 +21,10 @@ type User struct {
 
 type Users []User
 
-func NewUser(lastname, firstname, email, password string) User {
+func NewUser(lastname, firstname, email, password, secretSalt string, hashCount int) User {
 	salt := lib.MakeRandomString(64)
 
-	secretSalt := os.Getenv("SECRET_SALT")
-
-	password = lib.HashString(password+salt+secretSalt, 100000)
+	password = lib.HashString(password+salt+secretSalt, hashCount)
 
 	return User{
 		UserId:    uuid.New(),

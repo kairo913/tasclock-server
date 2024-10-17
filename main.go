@@ -2,43 +2,36 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
-	"github.com/caarlos0/env"
 	"github.com/gin-gonic/gin"
 	"github.com/kairo913/tasclock-server/app/infra"
+	"github.com/kairo913/tasclock-server/app/lib/config"
 )
-
-type Config struct {
-	Port         string `env:"PORT" envDefault:"8080"`
-	IsProduction bool   `env:"PRODUCTION" envDefault:"false"`
-}
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	cfg := Config{}
-	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("%+v\n", err)
-	}
+	cfg := config.NewServerConfig(ctx)
 
-	if cfg.IsProduction {
+	if cfg.ProductionMode {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	r, err := infra.SetUpRouter(ctx)
 	if err != nil {
-		log.Fatalf("%+v\n", err)
+		panic(fmt.Sprintf("%+v", err))
 	}
 
 	sqlHandler, err := infra.NewSqlHandler()
 	if err != nil {
-		log.Fatalf("%+v\n", err)
+		panic(fmt.Sprintf("%+v", err))
 	}
 
 	log.Println("Connected to database")
@@ -54,7 +47,7 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			panic(fmt.Sprintf("listen: %s\n", err))
 		}
 	}()
 
@@ -66,7 +59,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("server shutdown forced: %s\n", err)
+		panic(fmt.Sprintf("server shutdown forced: %s\n", err))
 	}
 
 	log.Println("Server exiting")
