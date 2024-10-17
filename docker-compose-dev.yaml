@@ -16,6 +16,7 @@ services:
             DB_TYPE: ${DB_TYPE}
             PORT: ${PORT}
             PRODUCTION: ${PRODUCTION}
+            SECRET_SALT: ${SECRET_SALT}
         ports:
             - ${PORT}:${PORT}
         tty: true
