@@ -21,7 +21,7 @@ func SetUpRouter(c context.Context) (*gin.Engine, error) {
 
 	router.Use(CORSMiddleware(cfg.Port))
 
-	NewUserHandler(router.Group("/user"), sqlHandler)
+	NewUserHandler(c, router.Group("/user"), sqlHandler)
 
 	return router, nil
 }
