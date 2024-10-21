@@ -10,6 +10,7 @@ import (
 
 type SqlHandler struct {
 	Client *sql.DB
+	Ctx    context.Context
 }
 
 func NewSqlHandler(ctx context.Context) (*SqlHandler, error) {
@@ -20,7 +21,7 @@ func NewSqlHandler(ctx context.Context) (*SqlHandler, error) {
 		return nil, err
 	}
 
-	return &SqlHandler{Client: client}, nil
+	return &SqlHandler{Client: client, Ctx: ctx}, nil
 }
 
 func (c *SqlHandler) Close() error {
@@ -29,7 +30,7 @@ func (c *SqlHandler) Close() error {
 
 func (c *SqlHandler) Execute(statement string, args ...interface{}) (repository.Result, error) {
 	res := SqlResult{}
-	result, err := c.Client.Exec(statement, args...)
+	result, err := c.Client.ExecContext(c.Ctx, statement, args...)
 	if err != nil {
 		return res, err
 	}
@@ -38,7 +39,7 @@ func (c *SqlHandler) Execute(statement string, args ...interface{}) (repository.
 }
 
 func (c *SqlHandler) Query(statement string, args ...interface{}) (repository.Row, error) {
-	rows, err := c.Client.Query(statement, args...)
+	rows, err := c.Client.QueryContext(c.Ctx, statement, args...)
 	if err != nil {
 		return nil, err
 	}
