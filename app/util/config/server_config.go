@@ -9,7 +9,7 @@ import (
 
 type ServerConfig struct {
 	Port           string `env:"PORT, default=8080"`
-	ProductionMode bool   `env:"PRODUCTION, default=true"`
+	ProductionMode bool   `env:"PRODUCTION_MODE, default=false"`
 }
 
 func NewServerConfig(ctx context.Context) *ServerConfig {

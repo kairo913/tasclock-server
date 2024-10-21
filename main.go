@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kairo913/tasclock-server/app/infra"
-	"github.com/kairo913/tasclock-server/app/lib/config"
+	"github.com/kairo913/tasclock-server/app/util/config"
+	"github.com/kairo913/tasclock-server/app/web/handler"
 )
 
 func main() {
@@ -24,19 +24,10 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	r, err := infra.SetUpRouter(ctx)
+	r, err := handler.SetUpRouter(ctx)
 	if err != nil {
 		panic(fmt.Sprintf("%+v", err))
 	}
-
-	sqlHandler, err := infra.NewSqlHandler()
-	if err != nil {
-		panic(fmt.Sprintf("%+v", err))
-	}
-
-	log.Println("Connected to database")
-
-	sqlHandler.Close()
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,
