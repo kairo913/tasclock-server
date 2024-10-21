@@ -14,4 +14,5 @@ func NewUserHandler(ctx context.Context, userGroup *gin.RouterGroup, sqlHandler 
 	userController := controller.NewUserController(service.NewUserAppService(ctx, repository.NewUserRepository(sqlHandler)))
 
 	userGroup.POST("/signup", userController.SignUp)
+	userGroup.POST("/signin", userController.SignIn)
 }
