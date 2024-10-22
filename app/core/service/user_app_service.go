@@ -62,11 +62,7 @@ func (uas *UserAppService) GetUserByEmail(email string) (user *entity.User, err 
 func (uas *UserAppService) VerifyPassword(user *entity.User, password string) bool {
 	hashedPassword := util.Hash(password+user.Salt+uas.hashConfig.SecretSalt, uas.hashConfig.HashCount)
 
-	if user.Password != hashedPassword {
-		return false
-	}
-
-	return true
+	return user.Password == hashedPassword
 }
 
 func (uas *UserAppService) UpdateLastname(userId, lastname string) (err error) {
