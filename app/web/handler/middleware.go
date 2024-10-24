@@ -8,6 +8,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	csrf "github.com/utrack/gin-csrf"
 )
 
 type TokenClaims struct {
@@ -21,6 +22,16 @@ func CORSMiddleware(port string) gin.HandlerFunc {
 	config.AllowMethods = []string{"GET", "POST"}
 	config.AllowHeaders = []string{"Authorization", "Content-Type"}
 	return cors.New(config)
+}
+
+func CSRFMiddleware(secret string) gin.HandlerFunc {
+	return csrf.Middleware(csrf.Options{
+		Secret: secret,
+		ErrorFunc: func(c *gin.Context) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "CSRF token mismatch"})
+			c.Abort()
+		},
+	})
 }
 
 func AuthMiddleware(secret string) gin.HandlerFunc {
@@ -49,7 +60,7 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 			c.Abort()
 		}
 
-		if claims.ExpiresAt.Time.Before(time.Now())  {
+		if claims.ExpiresAt.Time.Before(time.Now()) {
 			c.Header("WWW-Authenticate", "Bearer error=\"expired_token\"")
 			c.Status(http.StatusUnauthorized)
 			c.Abort()
