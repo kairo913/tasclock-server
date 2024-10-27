@@ -65,29 +65,15 @@ func (uas *UserAppService) VerifyPassword(user *entity.User, password string) bo
 	return user.Password == hashedPassword
 }
 
-func (uas *UserAppService) UpdateLastname(userId, lastname string) (err error) {
+func (uas *UserAppService) UpdateUser(userId, lastname, firstname, email string) (err error) {
 	user, err := uas.userRepository.GetByUserId(userId)
 	if err != nil {
 		return
 	}
 
 	user.UpdateLastname(lastname)
-
-	err = uas.userRepository.Update(user)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (uas *UserAppService) UpdateFirstname(userId, firstname string) (err error) {
-	user, err := uas.userRepository.GetByUserId(userId)
-	if err != nil {
-		return
-	}
-
 	user.UpdateFirstname(firstname)
+	user.UpdateEmail(email)
 
 	err = uas.userRepository.Update(user)
 	if err != nil {

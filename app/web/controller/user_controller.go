@@ -141,3 +141,47 @@ func (uc *UserController) SignOut(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+func (uc *UserController) Update(c *gin.Context) {
+	var req UpdateUserRequest
+
+	userId := c.GetString("userId")
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := uc.userAppService.GetUser(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if user.Email != req.Email {
+		exist, err := uc.userAppService.ExistByEmail(req.Email)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if exist {
+			c.JSON(http.StatusConflict, gin.H{"error": "Email already registered"})
+			return
+		}
+	}
+
+	err = uc.userAppService.UpdateUser(userId, req.Lastname, req.Firstname, req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

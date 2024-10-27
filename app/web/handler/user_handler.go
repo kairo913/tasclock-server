@@ -20,4 +20,7 @@ func NewUserHandler(ctx context.Context, userGroup *gin.RouterGroup, sqlHandler 
 	})
 	userGroup.POST("/signup", userController.SignUp)
 	userGroup.POST("/signin", userController.SignIn)
+	userGroup.POST("/signout", userController.SignOut)
+	userGroup.POST("/refresh", userController.Refresh)
+	userGroup.POST("/update", userController.Update)
 }
