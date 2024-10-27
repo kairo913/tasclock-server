@@ -25,5 +25,7 @@ func SetUpRouter(c context.Context) (*gin.Engine, error) {
 
 	NewUserHandler(c, router.Group("/user"), sqlHandler)
 
+	NewTaskHandler(c, router.Group("/task"), sqlHandler)
+
 	return router, nil
 }
