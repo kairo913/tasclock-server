@@ -20,7 +20,7 @@ func CORSMiddleware(port string) gin.HandlerFunc {
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"http://localhost:" + port}
 	config.AllowMethods = []string{"GET", "POST"}
-	config.AllowHeaders = []string{"Authorization", "Content-Type"}
+	config.AllowHeaders = []string{"Authorization", "Content-Type", "X-CSRF-Token"}
 	return cors.New(config)
 }
 
