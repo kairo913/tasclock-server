@@ -10,6 +10,3 @@ type SignUpResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type SignInResponse struct {
-	Id string `json:"id"`
-}

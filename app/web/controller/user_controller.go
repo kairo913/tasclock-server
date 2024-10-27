@@ -10,10 +10,11 @@ import (
 
 type UserController struct {
 	userAppService *service.UserAppService
+	tokenDomainService *service.TokenDomainService
 }
 
-func NewUserController(userAppService *service.UserAppService) *UserController {
-	return &UserController{userAppService}
+func NewUserController(userAppService *service.UserAppService, tokenDomainService *service.TokenDomainService) *UserController {
+	return &UserController{userAppService, tokenDomainService}
 }
 
 func (uc *UserController) SignUp(c *gin.Context) {
@@ -93,8 +94,50 @@ func (uc *UserController) SignIn(c *gin.Context) {
 		return
 	}
 
-	var res SignInResponse
-	res.Id = user.Id.String()
+	accessToken, refreshToken, err := uc.tokenDomainService.GenerateToken(user.Id.String())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-	c.JSON(http.StatusOK, res)
+	c.Header("Authorization", "Bearer " + accessToken)
+
+	c.SetCookie("refresh_token", refreshToken, uc.tokenDomainService.GetRefreshTokenAge(), "/", "", false, true)
+
+	c.Status(http.StatusNoContent)
+}
+
+func (uc *UserController) Refresh(c *gin.Context) {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	accessToken, refreshToken, err := uc.tokenDomainService.RefreshToken(refreshToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Header("Authorization", "Bearer " + accessToken)
+
+	c.SetCookie("refresh_token", refreshToken, uc.tokenDomainService.GetRefreshTokenAge(), "/", "", false, true)
+
+	c.Status(http.StatusNoContent)
+}
+
+func (uc *UserController) SignOut(c *gin.Context) {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := uc.tokenDomainService.RevokeToken(refreshToken); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

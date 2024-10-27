@@ -9,8 +9,9 @@ import (
 )
 
 type SessionConfig struct {
-	AccessTokenExpire time.Duration `env:"ACCESS_TOKEN_EXPIRE, default=30m"`
+	AccessTokenExpire  time.Duration `env:"ACCESS_TOKEN_EXPIRE, default=30m"`
 	RefreshTokenExpire time.Duration `env:"REFRESH_TOKEN_EXPIRE, default=720h"`
+	JWTSecret          string        `env:"JWT_SECRET, required"`
 }
 
 func NewSessionConfig(ctx context.Context) *SessionConfig {

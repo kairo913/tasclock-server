@@ -13,7 +13,7 @@ import (
 )
 
 func NewUserHandler(ctx context.Context, userGroup *gin.RouterGroup, sqlHandler *database.SqlHandler) {
-	userController := controller.NewUserController(service.NewUserAppService(ctx, repository.NewUserRepository(sqlHandler)))
+	userController := controller.NewUserController(service.NewUserAppService(ctx, repository.NewUserRepository(sqlHandler)), service.NewTokenDomainService(ctx, repository.NewUserRefreshTokenRepository(sqlHandler)))
 
 	userGroup.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"token": csrf.GetToken(c)})
