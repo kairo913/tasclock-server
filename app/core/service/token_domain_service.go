@@ -138,7 +138,10 @@ func (tds *TokenDomainService) RefreshToken(token string) (accessToken, refreshT
 
 	userRefreshToken.Use()
 
-	tds.userTokenRepository.Update(userRefreshToken)
+	err = tds.userTokenRepository.Update(userRefreshToken)
+	if err != nil {
+		return
+	}
 
 	accessToken, refreshToken, err = tds.GenerateToken(claims.Audience[0])
 	if err != nil {
