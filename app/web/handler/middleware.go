@@ -8,6 +8,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/kairo913/tasclock-server/app/util"
 	csrf "github.com/utrack/gin-csrf"
 )
 
@@ -24,9 +25,9 @@ func CORSMiddleware(port string) gin.HandlerFunc {
 	return cors.New(config)
 }
 
-func CSRFMiddleware(secret string) gin.HandlerFunc {
+func CSRFMiddleware() gin.HandlerFunc {
 	return csrf.Middleware(csrf.Options{
-		Secret: secret,
+		Secret: util.MakeRandomString(32),
 		ErrorFunc: func(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "CSRF token mismatch"})
 			c.Abort()

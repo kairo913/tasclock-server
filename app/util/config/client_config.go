@@ -9,7 +9,6 @@ import (
 
 type ClientConfig struct {
 	Port       string `env:"CLIENT_PORT, default=3000"`
-	CSRFSecret string `env:"CSRF_SECRET, required"`
 }
 
 func NewClientConfig(ctx context.Context) *ClientConfig {
