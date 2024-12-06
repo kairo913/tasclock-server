@@ -19,8 +19,8 @@ func NewUserHandler(ctx context.Context, userGroup *gin.RouterGroup, sqlHandler 
 		c.JSON(http.StatusOK, gin.H{"token": csrf.GetToken(c)})
 	})
 	userGroup.POST("/signup", userController.SignUp)
-	userGroup.POST("/signin", userController.SignIn)
+	userGroup.GET("/signin", userController.SignIn)
 	userGroup.POST("/signout", userController.SignOut)
 	userGroup.POST("/refresh", userController.Refresh)
-	userGroup.POST("/update", userController.Update)
+	userGroup.PUT("/update", userController.Update)
 }

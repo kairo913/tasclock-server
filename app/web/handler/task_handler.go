@@ -19,8 +19,8 @@ func NewTaskHandler(ctx context.Context, taskGroup *gin.RouterGroup, sqlHandler 
 	taskGroup.Use(AuthMiddleware(sessonConfig.JWTSecret))
 
 	taskGroup.POST("/create", taskController.CreateTask)
-	taskGroup.POST("/get", taskController.GetTask)
-	taskGroup.POST("/getall", taskController.GetTasks)
-	taskGroup.POST("/delete", taskController.DeleteTask)
-	taskGroup.POST("/update", taskController.UpdateTask)
+	taskGroup.GET("/get", taskController.GetTask)
+	taskGroup.GET("/getall", taskController.GetTasks)
+	taskGroup.DELETE("/delete", taskController.DeleteTask)
+	taskGroup.PUT("/update", taskController.UpdateTask)
 }

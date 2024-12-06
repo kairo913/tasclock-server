@@ -20,7 +20,7 @@ type TokenClaims struct {
 func CORSMiddleware(port string) gin.HandlerFunc {
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"http://localhost:" + port}
-	config.AllowMethods = []string{"GET", "POST"}
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
 	config.AllowHeaders = []string{"Authorization", "Content-Type", "X-CSRF-Token"}
 	return cors.New(config)
 }
