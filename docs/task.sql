@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS task {
     deadline TIMESTAMP NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
+    FOREIGN KEY (user_id) REFERENCES user_info(user_id)
 }
