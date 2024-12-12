@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/kairo913/tasclock-server/app/core/entity"
@@ -42,21 +43,11 @@ func (uas *UserAppService) ExistByEmail(email string) (bool, error) {
 }
 
 func (uas *UserAppService) GetUser(userId string) (user *entity.User, err error) {
-	user, err = uas.userRepository.GetByUserId(userId)
-	if err != nil {
-		return
-	}
-
-	return
+	return uas.userRepository.GetByUserId(userId)
 }
 
 func (uas *UserAppService) GetUserByEmail(email string) (user *entity.User, err error) {
-	user, err = uas.userRepository.GetByEmail(email)
-	if err != nil {
-		return
-	}
-
-	return
+	return uas.userRepository.GetByEmail(email)
 }
 
 func (uas *UserAppService) VerifyPassword(user *entity.User, password string) bool {
@@ -65,14 +56,22 @@ func (uas *UserAppService) VerifyPassword(user *entity.User, password string) bo
 	return user.Password == hashedPassword
 }
 
-func (uas *UserAppService) UpdateUser(userId, lastname, firstname, email string) (err error) {
-	user, err := uas.userRepository.GetByUserId(userId)
+func (uas *UserAppService) UpdateUser(user *entity.User, lastname, firstname string) (err error) {
+	user.UpdateName(lastname, firstname)
+
+	return uas.userRepository.Update(user)
+}
+
+func (uas *UserAppService) UpdateEmail(user *entity.User, email string) (err error) {
+	exist, err := uas.userRepository.ExistByEmail(email)
 	if err != nil {
 		return
 	}
 
-	user.UpdateLastname(lastname)
-	user.UpdateFirstname(firstname)
+	if exist {
+		return errors.New("Email already used")
+	}
+
 	user.UpdateEmail(email)
 
 	err = uas.userRepository.Update(user)
@@ -83,28 +82,7 @@ func (uas *UserAppService) UpdateUser(userId, lastname, firstname, email string)
 	return
 }
 
-func (uas *UserAppService) UpdateEmail(userId, email string) (err error) {
-	user, err := uas.userRepository.GetByUserId(userId)
-	if err != nil {
-		return
-	}
-
-	user.UpdateEmail(email)
-
-	err = uas.userRepository.Update(user)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (uas *UserAppService) UpdatePassword(userId, password string) (err error) {
-	user, err := uas.userRepository.GetByUserId(userId)
-	if err != nil {
-		return
-	}
-
+func (uas *UserAppService) UpdatePassword(user *entity.User, password string) (err error) {
 	salt := util.MakeRandomString(64)
 
 	password = util.Hash(password+salt+uas.hashConfig.SecretSalt, uas.hashConfig.HashCount)
@@ -117,4 +95,8 @@ func (uas *UserAppService) UpdatePassword(userId, password string) (err error) {
 	}
 
 	return
+}
+
+func (uas *UserAppService) DeleteUser(id int64) (err error) {
+	return uas.userRepository.Delete(id)
 }

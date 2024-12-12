@@ -5,7 +5,7 @@ import "time"
 type DBTask struct {
 	Id          int64     `db:"id"`
 	TaskId      string    `db:"task_id"`
-	UserId      string    `db:"user_id"`
+	UserId      int64     `db:"user_id"`
 	Title       string    `db:"title"`
 	Description string    `db:"description"`
 	IsDone      bool      `db:"is_done"`

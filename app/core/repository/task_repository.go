@@ -6,8 +6,9 @@ import (
 
 type TaskRepository interface {
 	Store(*entity.Task) error
-	Get(id string) (*entity.Task, error)
-	GetAll(userId string) (entity.Tasks, error)
+	Get(id int64) (*entity.Task, error)
+	GetByTaskId(taskId string) (*entity.Task, error)
+	GetAll(userId int64) (*entity.Tasks, error)
 	Update(*entity.Task) error
-	Delete(id string) error
+	Delete(id int64) error
 }

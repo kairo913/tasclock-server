@@ -7,8 +7,8 @@ import (
 	"github.com/kairo913/tasclock-server/app/infra/repository"
 	"github.com/kairo913/tasclock-server/app/util/config"
 
-    _ "github.com/go-sql-driver/mysql"
-    _ "github.com/lib/pq"
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 type SqlHandler struct {

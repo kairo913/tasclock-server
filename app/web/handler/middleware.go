@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"net/http"
 	"strings"
 	"time"
@@ -8,14 +9,8 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/kairo913/tasclock-server/app/util"
-	csrf "github.com/utrack/gin-csrf"
+	"github.com/kairo913/tasclock-server/app/core/service"
 )
-
-type TokenClaims struct {
-	UserId string
-	jwt.RegisteredClaims
-}
 
 func CORSMiddleware(port string) gin.HandlerFunc {
 	config := cors.DefaultConfig()
@@ -23,16 +18,6 @@ func CORSMiddleware(port string) gin.HandlerFunc {
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
 	config.AllowHeaders = []string{"Authorization", "Content-Type", "X-CSRF-Token"}
 	return cors.New(config)
-}
-
-func CSRFMiddleware() gin.HandlerFunc {
-	return csrf.Middleware(csrf.Options{
-		Secret: util.MakeRandomString(32),
-		ErrorFunc: func(c *gin.Context) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "CSRF token mismatch"})
-			c.Abort()
-		},
-	})
 }
 
 func AuthMiddleware(secret string) gin.HandlerFunc {
@@ -45,7 +30,7 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 			c.Abort()
 		}
 
-		token, err := jwt.ParseWithClaims(t, &TokenClaims{}, func(t *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(t, &jwt.RegisteredClaims{}, func(t *jwt.Token) (interface{}, error) {
 			return []byte(secret), nil
 		})
 		if err != nil {
@@ -54,8 +39,8 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 			c.Abort()
 		}
 
-		claims, ok := token.Claims.(*TokenClaims)
-		if !ok || claims.UserId == "" {
+		claims, ok := token.Claims.(*jwt.RegisteredClaims)
+		if !ok {
 			c.Header("WWW-Authenticate", "Bearer error=\"invalid_token\"")
 			c.Status(http.StatusUnauthorized)
 			c.Abort()
@@ -67,7 +52,26 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 			c.Abort()
 		}
 
-		c.Set("userId", claims.UserId)
+		c.Next()
+	}
+}
+
+func UserMiddleware(userAppService *service.UserAppService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		user, err := userAppService.GetUser(id)
+		if err == sql.ErrNoRows {
+			c.Status(http.StatusNotFound)
+			c.Abort()
+		}
+
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			c.Abort()
+		}
+
+		c.Set("user", user)
 
 		c.Next()
 	}

@@ -7,7 +7,8 @@ import (
 )
 
 type User struct {
-	Id        uuid.UUID `json:"id"`
+	Id        int64     `json:"-"`
+	UserId    uuid.UUID `json:"id"`
 	Lastname  string    `json:"lastname"`
 	Firstname string    `json:"firstname"`
 	Email     string    `json:"email"`
@@ -19,9 +20,9 @@ type User struct {
 
 type Users []User
 
-func NewUser(id uuid.UUID, lastname, firstname, email, password, salt string) *User {
+func NewUser(userId uuid.UUID, lastname, firstname, email, password, salt string) *User {
 	return &User{
-		Id:        id,
+		UserId:    userId,
 		Lastname:  lastname,
 		Firstname: firstname,
 		Email:     email,
@@ -32,12 +33,8 @@ func NewUser(id uuid.UUID, lastname, firstname, email, password, salt string) *U
 	}
 }
 
-func (u *User) UpdateLastname(lastname string) {
+func (u *User) UpdateName(lastname, firstname string) {
 	u.Lastname = lastname
-	u.UpdatedAt = time.Now()
-}
-
-func (u *User) UpdateFirstname(firstname string) {
 	u.Firstname = firstname
 	u.UpdatedAt = time.Now()
 }

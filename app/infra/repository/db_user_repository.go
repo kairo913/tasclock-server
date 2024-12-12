@@ -14,7 +14,7 @@ func NewUserRepository(sqlHandler SqlHandler) *DBUserRepository {
 }
 
 func (repo *DBUserRepository) Store(user *entity.User) error {
-	_, err := repo.SqlHandler.Execute("INSERT INTO users (user_id, lastname, firstname, email, password, salt, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", user.Id.String(), user.Lastname, user.Firstname, user.Email, user.Password, user.Salt, user.CreatedAt, user.UpdatedAt)
+	_, err := repo.SqlHandler.Execute("INSERT INTO users (user_id, lastname, firstname, email, password, salt, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", user.UserId, user.Lastname, user.Firstname, user.Email, user.Password, user.Salt, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,8 @@ func (repo *DBUserRepository) Get(id int64) (*entity.User, error) {
 	}
 
 	return &entity.User{
-		Id:        uuid.MustParse(user.UserId),
+		Id:        user.Id,
+		UserId:    uuid.MustParse(user.UserId),
 		Lastname:  user.Lastname,
 		Firstname: user.Firstname,
 		Email:     user.Email,
@@ -80,7 +81,8 @@ func (repo *DBUserRepository) GetByUserId(userId string) (*entity.User, error) {
 	}
 
 	return &entity.User{
-		Id:        uuid.MustParse(user.UserId),
+		Id:        user.Id,
+		UserId:    uuid.MustParse(user.UserId),
 		Lastname:  user.Lastname,
 		Firstname: user.Firstname,
 		Email:     user.Email,
@@ -106,7 +108,8 @@ func (repo *DBUserRepository) GetByEmail(email string) (*entity.User, error) {
 	}
 
 	return &entity.User{
-		Id:        uuid.MustParse(user.UserId),
+		Id:        user.Id,
+		UserId:    uuid.MustParse(user.UserId),
 		Lastname:  user.Lastname,
 		Firstname: user.Firstname,
 		Email:     user.Email,
@@ -118,7 +121,7 @@ func (repo *DBUserRepository) GetByEmail(email string) (*entity.User, error) {
 }
 
 func (repo *DBUserRepository) Update(user *entity.User) error {
-	_, err := repo.SqlHandler.Execute("UPDATE users SET lastname = ?, firstname = ?, email = ?, password = ?, salt = ?, updated_at = ? WHERE user_id = ?", user.Lastname, user.Firstname, user.Password, user.Salt, user.UpdatedAt, user.Id.String())
+	_, err := repo.SqlHandler.Execute("UPDATE users SET lastname = ?, firstname = ?, email = ?, password = ?, salt = ?, updated_at = ? WHERE id = ?", user.Lastname, user.Firstname, user.Password, user.Salt, user.UpdatedAt, user.Id)
 	if err != nil {
 		return err
 	}
@@ -126,8 +129,8 @@ func (repo *DBUserRepository) Update(user *entity.User) error {
 	return nil
 }
 
-func (repo *DBUserRepository) Delete(userId string) error {
-	_, err := repo.SqlHandler.Execute("DELETE FROM users WHERE user_id = ?", userId)
+func (repo *DBUserRepository) Delete(id int64) error {
+	_, err := repo.SqlHandler.Execute("DELETE FROM users WHERE id = ?", id)
 	if err != nil {
 		return err
 	}

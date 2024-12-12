@@ -21,11 +21,7 @@ func SetUpRouter(c context.Context) (*gin.Engine, error) {
 
 	router.Use(CORSMiddleware(cfg.Port))
 
-	router.Use(CSRFMiddleware())
-
-	NewUserHandler(c, router.Group("/user"), sqlHandler)
-
-	NewTaskHandler(c, router.Group("/task"), sqlHandler)
+	NewUserHandler(c, router.Group("/users"), sqlHandler)
 
 	return router, nil
 }

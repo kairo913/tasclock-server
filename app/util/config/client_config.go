@@ -8,7 +8,7 @@ import (
 )
 
 type ClientConfig struct {
-	Port       string `env:"CLIENT_PORT, default=3000"`
+	Port string `env:"CLIENT_PORT, default=3000"`
 }
 
 func NewClientConfig(ctx context.Context) *ClientConfig {

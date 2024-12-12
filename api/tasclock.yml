@@ -148,8 +148,12 @@ paths:
                                         type: string
                                     firstname:
                                         type: string
-                                    email:
+                                    created_at:
                                         type: string
+                                        format: date
+                                    updated_at:
+                                        type: string
+                                        format: date
                 "401":
                     description: Unauthorized
                 "403":
@@ -175,15 +179,9 @@ paths:
                             properties:
                                 lastname:
                                     type: string
+                                    maxLength: 20
                                 firstname:
                                     type: string
-                                email:
-                                    type: string
-                                    format: email
-                                password:
-                                    type: string
-                                    format: password
-                                    minLength: 8
                                     maxLength: 20
             responses:
                 "204":
@@ -213,11 +211,143 @@ paths:
                     description: Forbidden
                 "404":
                     description: Not found
+    /users/{id}/email:
+        put:
+            summary: Update email by id
+            security:
+                - bearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                email:
+                                    type: string
+                                    format: email
+            responses:
+                "200":
+                    description: success operation
+                "401":
+                    description: Unauthorized
+                "403":
+                    description: Forbidden
+                "404":
+                    description: Not found
+    /users/{id}/password:
+        put:
+            summary: Update password by id
+            security:
+                - bearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                password:
+                                    type: string
+                                    format: password
+                                    minLength: 8
+                                    maxLength: 20
+            responses:
+                "200":
+                    description: success operation
+                "401":
+                    description: Unauthorized
+                "403":
+                    description: Forbidden
+                "404":
+                    description: Not found
     /users/{id}/tasks:
+        post:
+            summary: Create a new task
+            security:
+                - bearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                title:
+                                    type: string
+                                description:
+                                    type: string
+                                    nullable: true
+                                reward:
+                                    type: number
+                                    nullable: true
+                                deadline:
+                                    type: string
+                                    format: date
+                                    nullable: true
+            responses:
+                "201":
+                    description: Created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    id:
+                                        type: string
+                                    title:
+                                        type: string
+                                    description:
+                                        type: string
+                                    is_done:
+                                        type: boolean
+                                    reward:
+                                        type: number
+                                    elapsed:
+                                        type: number
+                                    deadline:
+                                        type: string
+                                        format: date
+                                    created_at:
+                                        type: string
+                                        format: date
+                                    updated_at:
+                                        type: string
+                                        format: date
+                "400":
+                    description: Bad request
+                "401":
+                    description: Unauthorized
+                "403":
+                    description: Forbidden
         get:
             summary: Get all tasks
             security:
                 - bearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
             responses:
                 "200":
                     description: success operation
@@ -228,7 +358,7 @@ paths:
                                 items:
                                     type: object
                                     properties:
-                                        task_id:
+                                        id:
                                             type: string
                                         title:
                                             type: string
@@ -252,65 +382,6 @@ paths:
                                         updated_at:
                                             type: string
                                             format: date
-                "401":
-                    description: Unauthorized
-                "403":
-                    description: Forbidden
-        post:
-            summary: Create a new task
-            security:
-                - bearerAuth: []
-            requestBody:
-                required: true
-                content:
-                    application/json:
-                        schema:
-                            type: object
-                            properties:
-                                title:
-                                    type: string
-                                description:
-                                    type: string
-                                    nullable: true
-                                reward:
-                                    type: number
-                                deadline:
-                                    type: string
-                                    format: date
-                                    nullable: true
-            responses:
-                "201":
-                    description: Created
-                    content:
-                        application/json:
-                            schema:
-                                type: object
-                                properties:
-                                    task_id:
-                                        type: string
-                                    title:
-                                        type: string
-                                    description:
-                                        type: string
-                                        nullable: true
-                                    is_done:
-                                        type: boolean
-                                    reward:
-                                        type: number
-                                    elapsed:
-                                        type: number
-                                    deadline:
-                                        type: string
-                                        format: date
-                                        nullable: true
-                                    created_at:
-                                        type: string
-                                        format: date
-                                    updated_at:
-                                        type: string
-                                        format: date
-                "400":
-                    description: Bad request
                 "401":
                     description: Unauthorized
                 "403":
@@ -339,7 +410,7 @@ paths:
                             schema:
                                 type: object
                                 properties:
-                                    task_id:
+                                    id:
                                         type: string
                                     title:
                                         type: string

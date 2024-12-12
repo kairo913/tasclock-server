@@ -17,7 +17,7 @@ func NewTaskAppService(ctx context.Context, taskRepository repository.TaskReposi
 	return &TaskAppService{taskRepository}
 }
 
-func (tas *TaskAppService) CreateTask(userId uuid.UUID, title, description string, reward int, deadline time.Time) (task *entity.Task, err error) {
+func (tas *TaskAppService) CreateTask(userId int64, title, description string, reward int, deadline time.Time) (task *entity.Task, err error) {
 	id := uuid.New()
 
 	task = entity.NewTask(id, userId, title, description, reward, deadline)
@@ -31,23 +31,18 @@ func (tas *TaskAppService) CreateTask(userId uuid.UUID, title, description strin
 }
 
 func (tas *TaskAppService) GetTask(taskId string) (task *entity.Task, err error) {
-	return tas.taskRepository.Get(taskId)
+	return tas.taskRepository.GetByTaskId(taskId)
 }
 
-func (tas *TaskAppService) GetTasks(userId string) (tasks entity.Tasks, err error) {
+func (tas *TaskAppService) GetTasks(userId int64) (tasks *entity.Tasks, err error) {
 	return tas.taskRepository.GetAll(userId)
 }
 
-func (tas *TaskAppService) DeleteTask(taskId string) (err error) {
+func (tas *TaskAppService) DeleteTask(taskId int64) (err error) {
 	return tas.taskRepository.Delete(taskId)
 }
 
-func (tas *TaskAppService) UpdateTask(taskId, title, description string, is_done bool, reward, elapsed int, deadline time.Time) (err error) {
-	task, err := tas.taskRepository.Get(taskId)
-	if err != nil {
-		return
-	}
-
+func (tas *TaskAppService) UpdateTask(task *entity.Task, title, description string, is_done bool, reward, elapsed int, deadline time.Time) (err error) {
 	task.UpdateTask(title, description, is_done, reward, elapsed, deadline)
 
 	return tas.taskRepository.Update(task)

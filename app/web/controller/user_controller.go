@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator"
+	"github.com/kairo913/tasclock-server/app/core/entity"
 	"github.com/kairo913/tasclock-server/app/core/service"
 )
 
 type UserController struct {
-	userAppService *service.UserAppService
+	userAppService     *service.UserAppService
 	tokenDomainService *service.TokenDomainService
 }
 
@@ -17,169 +17,92 @@ func NewUserController(userAppService *service.UserAppService, tokenDomainServic
 	return &UserController{userAppService, tokenDomainService}
 }
 
-func (uc *UserController) SignUp(c *gin.Context) {
-	var req SignUpRequest
+func (uc *UserController) Get(c *gin.Context) {
+	user := c.MustGet("user").(*entity.User)
 
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	exist, err := uc.userAppService.ExistByEmail(req.Email)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if exist {
-		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
-		return
-	}
-
-	user, err := uc.userAppService.CreateUser(req.Lastname, req.Firstname, req.Email, req.Password)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	var res SignUpResponse
-	res.Id = user.Id.String()
+	var res GetUserResponse
 	res.Lastname = user.Lastname
 	res.Firstname = user.Firstname
-	res.Email = user.Email
 	res.CreatedAt = user.CreatedAt
+	res.UpdatedAt = user.UpdatedAt
 
-	c.JSON(http.StatusCreated, res)
+	c.JSON(http.StatusOK, res)
 }
 
-func (uc *UserController) SignIn(c *gin.Context) {
-	var req SignInRequest
-
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	exist, err := uc.userAppService.ExistByEmail(req.Email)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if !exist {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-	user, err := uc.userAppService.GetUserByEmail(req.Email)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
-	}
-
-	if !uc.userAppService.VerifyPassword(user, req.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
-		return
-	}
-
-	accessToken, refreshToken, err := uc.tokenDomainService.GenerateToken(user.Id.String())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.Header("Authorization", "Bearer " + accessToken)
-
-	c.SetCookie("refresh_token", refreshToken, uc.tokenDomainService.GetRefreshTokenAge(), "/", "", false, true)
-
-	c.Status(http.StatusNoContent)
-}
-
-func (uc *UserController) Refresh(c *gin.Context) {
-	refreshToken, err := c.Cookie("refresh_token")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	accessToken, refreshToken, err := uc.tokenDomainService.RefreshToken(refreshToken)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.Header("Authorization", "Bearer " + accessToken)
-
-	c.SetCookie("refresh_token", refreshToken, uc.tokenDomainService.GetRefreshTokenAge(), "/", "", false, true)
-
-	c.Status(http.StatusNoContent)
-}
-
-func (uc *UserController) SignOut(c *gin.Context) {
-	refreshToken, err := c.Cookie("refresh_token")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if err := uc.tokenDomainService.RevokeToken(refreshToken); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.Status(http.StatusNoContent)
-}
-
-func (uc *UserController) Update(c *gin.Context) {
+func (uc *UserController) Put(c *gin.Context) {
 	var req UpdateUserRequest
-
-	userId := c.GetString("userId")
-
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	user := c.MustGet("user").(*entity.User)
+
+	if user.Lastname == req.Lastname && user.Firstname == req.Firstname {
+		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	user, err := uc.userAppService.GetUser(userId)
+	err := uc.userAppService.UpdateUser(user, req.Lastname, req.Firstname)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
-	if user.Email != req.Email {
-		exist, err := uc.userAppService.ExistByEmail(req.Email)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+	c.Status(http.StatusNoContent)
+}
 
-		if exist {
-			c.JSON(http.StatusConflict, gin.H{"error": "Email already registered"})
-			return
-		}
+func (uc *UserController) Delete(c *gin.Context) {
+	user := c.MustGet("user").(*entity.User)
+
+	err := uc.userAppService.DeleteUser(user.Id)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
 	}
 
-	err = uc.userAppService.UpdateUser(userId, req.Lastname, req.Firstname, req.Email)
+	c.Status(http.StatusNoContent)
+}
+
+func (uc *UserController) UpdateEmail(c *gin.Context) {
+	var req UpdateUserEmailRequest
+	if err := c.BindJSON(&req); err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	user := c.MustGet("user").(*entity.User)
+
+	if user.Email == req.Email {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	err := uc.userAppService.UpdateEmail(user, req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		status := http.StatusInternalServerError
+		if err.Error() == "Email already used" {
+			status = http.StatusConflict
+		}
+		c.Status(status)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+func (uc *UserController) UpdatePassword(c *gin.Context) {
+	var req UpdateUserPasswordRequest
+	if err := c.BindJSON(&req); err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	user := c.MustGet("user").(*entity.User)
+
+	err := uc.userAppService.UpdatePassword(user, req.Password)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 

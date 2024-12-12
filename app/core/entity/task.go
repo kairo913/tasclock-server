@@ -7,8 +7,9 @@ import (
 )
 
 type Task struct {
-	Id          uuid.UUID `json:"id"`
-	UserId      uuid.UUID `json:"user_id"`
+	Id          int64     `json:"-"`
+	TaskId      uuid.UUID `json:"id"`
+	UserId      int64     `json:"-"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	IsDone      bool      `json:"is_done"`
@@ -21,9 +22,9 @@ type Task struct {
 
 type Tasks []Task
 
-func NewTask(id, userId uuid.UUID, title, description string, reward int, deadline time.Time) *Task {
+func NewTask(taskId uuid.UUID, userId int64, title, description string, reward int, deadline time.Time) *Task {
 	return &Task{
-		Id:          id,
+		TaskId:      taskId,
 		UserId:      userId,
 		Title:       title,
 		Description: description,

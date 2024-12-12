@@ -1,11 +1,12 @@
 package controller
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator"
-	"github.com/google/uuid"
+	"github.com/kairo913/tasclock-server/app/core/entity"
 	"github.com/kairo913/tasclock-server/app/core/service"
 )
 
@@ -17,69 +18,29 @@ func NewTaskController(taskAppService *service.TaskAppService) *TaskController {
 	return &TaskController{taskAppService}
 }
 
-func (tc *TaskController) CreateTask(c *gin.Context) {
+func (tc *TaskController) Create(c *gin.Context) {
 	var req CreateTaskRequest
-
-	userId := uuid.MustParse(c.GetString("userId"))
-
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Status(http.StatusBadRequest)
 		return
 	}
 
 	validate := validator.New()
 	if err := validate.Struct(req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	task, err := tc.taskAppService.CreateTask(userId, req.Title, req.Description, req.Reward, req.Deadline)
+	user := c.MustGet("user").(*entity.User)
+
+	task, err := tc.taskAppService.CreateTask(user.Id, req.Title, req.Description, req.Reward, req.Deadline)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
 	var res CreateTaskResponse
-	res.Id = task.Id.String()
-	res.Title = task.Title
-	res.Description = task.Description
-	res.Reward = task.Reward
-	res.Deadline = task.Deadline
-	res.CreatedAt = task.CreatedAt
-
-	c.JSON(http.StatusCreated, res)
-}
-
-func (tc *TaskController) GetTask(c *gin.Context) {
-	var req GetTaskRequest
-
-	userId := uuid.MustParse(c.GetString("userId"))
-
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	task, err := tc.taskAppService.GetTask(req.Id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if task.UserId != userId {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
-		return
-	}
-
-	var res GetTaskResponse
-
-	res.Id = task.Id.String()
+	res.Id = task.TaskId.String()
 	res.Title = task.Title
 	res.Description = task.Description
 	res.IsDone = task.IsDone
@@ -89,22 +50,33 @@ func (tc *TaskController) GetTask(c *gin.Context) {
 	res.CreatedAt = task.CreatedAt
 	res.UpdatedAt = task.UpdatedAt
 
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusCreated, res)
 }
 
-func (tc *TaskController) GetTasks(c *gin.Context) {
-	userId := c.GetString("userId")
+func (tc *TaskController) GetAll(c *gin.Context) {
+	user := c.MustGet("user").(*entity.User)
 
-	tasks, err := tc.taskAppService.GetTasks(userId)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	tasks, err := tc.taskAppService.GetTasks(user.Id)
+	if err == sql.ErrNoRows {
+		c.Status(http.StatusNoContent)
 		return
 	}
 
-	var res GetTasksResponse
-	for _, task := range tasks {
-		res.Tasks = append(res.Tasks, GetTaskResponse{
-			Id:          task.Id.String(),
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	if (*tasks)[0].UserId != user.Id {
+		c.Status(http.StatusForbidden)
+		return
+	}
+
+	var res GetAllTaskResponse
+	res.Tasks = make([]TaskResponse, 0)
+	for _, task := range *tasks {
+		res.Tasks = append(res.Tasks, TaskResponse{
+			Id:          task.TaskId.String(),
 			Title:       task.Title,
 			Description: task.Description,
 			IsDone:      task.IsDone,
@@ -119,72 +91,106 @@ func (tc *TaskController) GetTasks(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func (tc *TaskController) UpdateTask(c *gin.Context) {
+func (tc *TaskController) Get(c *gin.Context) {
+	user := c.MustGet("user").(*entity.User)
+
+	taskId := c.Param("id")
+
+	task, err := tc.taskAppService.GetTask(taskId)
+	if err == sql.ErrNoRows {
+		c.Status(http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	if task.UserId != user.Id {
+		c.Status(http.StatusForbidden)
+		return
+	}
+
+	var res GetTaskResponse
+	res.Id = task.TaskId.String()
+	res.Title = task.Title
+	res.Description = task.Description
+	res.IsDone = task.IsDone
+	res.Reward = task.Reward
+	res.Elapsed = task.Elapsed
+	res.Deadline = task.Deadline
+	res.CreatedAt = task.CreatedAt
+	res.UpdatedAt = task.UpdatedAt
+
+	c.JSON(http.StatusOK, res)
+}
+
+func (tc *TaskController) Put(c *gin.Context) {
 	var req UpdateTaskRequest
-
-	userId := uuid.MustParse(c.GetString("userId"))
-
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	taskId := c.Param("id")
+
+	task, err := tc.taskAppService.GetTask(taskId)
+	if err == sql.ErrNoRows {
+		c.Status(http.StatusNotFound)
 		return
 	}
 
-	task, err := tc.taskAppService.GetTask(req.Id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
-	if task.UserId != userId {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+	user := c.MustGet("user").(*entity.User)
+
+	if task.UserId != user.Id {
+		c.Status(http.StatusForbidden)
 		return
 	}
 
-	err = tc.taskAppService.UpdateTask(req.Id, req.Title, req.Description, req.IsDone, req.Reward, req.Elapsed, req.Deadline)
+	if task.Title == req.Title && task.Description == req.Description && task.IsDone == req.IsDone && task.Reward == req.Reward && task.Elapsed == req.Elapsed && task.Deadline == req.Deadline {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	err = tc.taskAppService.UpdateTask(task, req.Title, req.Description, req.IsDone, req.Reward, req.Elapsed, req.Deadline)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
 	c.Status(http.StatusNoContent)
 }
 
-func (tc *TaskController) DeleteTask(c *gin.Context) {
-	var req DeleteTaskRequest
+func (tc *TaskController) Delete(c *gin.Context) {
+	taskId := c.Param("id")
 
-	userId := uuid.MustParse(c.GetString("userId"))
-
-	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	task, err := tc.taskAppService.GetTask(taskId)
+	if err == sql.ErrNoRows {
+		c.Status(http.StatusNotFound)
 		return
 	}
 
-	validate := validator.New()
-	if err := validate.Struct(req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	task, err := tc.taskAppService.GetTask(req.Id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
-	if task.UserId != userId {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+	user := c.MustGet("user").(*entity.User)
+
+	if task.UserId != user.Id {
+		c.Status(http.StatusForbidden)
 		return
 	}
 
-	err = tc.taskAppService.DeleteTask(req.Id)
+	err = tc.taskAppService.DeleteTask(task.Id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
