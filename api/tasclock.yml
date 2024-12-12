@@ -12,6 +12,49 @@ components:
             bearerFormat: JWT
             description: JWT authorization
 paths:
+    /signup:
+        post:
+            summary: Signup
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                lastname:
+                                    type: string
+                                firstname:
+                                    type: string
+                                    nullable: true
+                                email:
+                                    type: string
+                                    format: email
+                                password:
+                                    type: string
+                                    format: password
+                                    minLength: 8
+                                    maxLength: 20
+            responses:
+                "201":
+                    description: Created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    user_id:
+                                        type: string
+                                    access_token:
+                                        type: string
+                                        format: JWT
+                                    refresh_token:
+                                        type: string
+                                        format: JWT
+                "400":
+                    description: Bad requset
+                "409":
+                    description: Conflict
     /login:
         post:
             summary: Login
@@ -52,61 +95,19 @@ paths:
                     description: Unauthorized
                 "404":
                     description: Not found
-    /signup:
+    /logout:
         post:
-            summary: Signup
-            requestBody:
-                required: true
-                content:
-                    application/json:
-                        schema:
-                            type: object
-                            properties:
-                                lastname:
-                                    type: string
-                                firstname:
-                                    type: string
-                                email:
-                                    type: string
-                                    format: email
-                                password:
-                                    type: string
-                                    format: password
-                                    minLength: 8
-                                    maxLength: 20
+            summary: Logout
+            security:
+                - bearerAuth: []
             responses:
-                "201":
-                    description: Created
-                    content:
-                        application/json:
-                            schema:
-                                type: object
-                                properties:
-                                    user_id:
-                                        type: string
-                                    access_token:
-                                        type: string
-                                        format: JWT
-                                    refresh_token:
-                                        type: string
-                                        format: JWT
-                "400":
-                    description: Bad requset
-                "409":
-                    description: Conflict
+                "204":
+                    description: success operation
+                "401":
+                    description: Unauthorized
     /refresh:
         post:
             summary: Refresh token
-            requestBody:
-                required: true
-                content:
-                    application/json:
-                        schema:
-                            type: object
-                            properties:
-                                refresh_token:
-                                    type: string
-                                    format: JWT
             responses:
                 "200":
                     description: success operation
