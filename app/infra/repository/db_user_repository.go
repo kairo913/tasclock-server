@@ -66,8 +66,8 @@ func (repo *DBUserRepository) Get(id int64) (*entity.User, error) {
 	}, nil
 }
 
-func (repo *DBUserRepository) GetByUserId(userId string) (*entity.User, error) {
-	row, err := repo.SqlHandler.Query("SELECT * FROM users WHERE user_id = ? LIMIT 1", userId)
+func (repo *DBUserRepository) GetByUserId(userId uuid.UUID) (*entity.User, error) {
+	row, err := repo.SqlHandler.Query("SELECT * FROM users WHERE user_id = ? LIMIT 1", userId.String())
 	if err != nil {
 		return nil, err
 	}

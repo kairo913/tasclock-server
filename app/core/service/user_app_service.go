@@ -42,7 +42,7 @@ func (uas *UserAppService) ExistByEmail(email string) (bool, error) {
 	return uas.userRepository.ExistByEmail(email)
 }
 
-func (uas *UserAppService) GetUser(userId string) (user *entity.User, err error) {
+func (uas *UserAppService) GetUser(userId uuid.UUID) (user *entity.User, err error) {
 	return uas.userRepository.GetByUserId(userId)
 }
 

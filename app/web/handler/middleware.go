@@ -9,6 +9,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/kairo913/tasclock-server/app/core/service"
 )
 
@@ -58,7 +59,11 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 
 func UserMiddleware(userAppService *service.UserAppService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id := c.Param("id")
+		id, err := uuid.Parse(c.Param("id"))
+        if err != nil {
+            c.Status(http.StatusBadRequest)
+            c.Abort()
+        }
 
 		user, err := userAppService.GetUser(id)
 		if err == sql.ErrNoRows {
